@@ -1,57 +1,63 @@
 <div align="center">
-<img src="https://mdn.alipayobjects.com/huamei_9rin5s/afts/img/0uIJQaelzccAAAAAQCAAAAgADiB8AQFr/original" alt="Neovate Code Logo" width="60" />
-<br />
-<br />
-<img src="https://mdn.alipayobjects.com/huamei_9rin5s/afts/img/UdphTJIBImUAAAAAQKAAAAgADiB8AQFr/original" alt="Neovate Code Logo Text" width="160" />
+<h1>📚 VahStack</h1>
+<p><strong>智能文档处理与任务管理助手</strong></p>
 
 ---
 
-[![](https://img.shields.io/npm/v/@neovate/code)](https://www.npmjs.com/package/@neovate/code)
-[![](https://img.shields.io/npm/dm/@neovate/code)](https://www.npmjs.com/package/@neovate/code)
-[![](https://github.com/neovateai/neovate-code/actions/workflows/test.yml/badge.svg)](https://github.com/neovateai/neovate-code/actions/workflows/test.yml)
-[![](https://img.shields.io/npm/l/@neovate/code)](https://www.npmjs.com/package/@neovate/code)
+[![](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/vahstack/vahstack)
+[![](https://img.shields.io/badge/license-MIT-green)](https://github.com/vahstack/vahstack)
+[![](https://img.shields.io/badge/platform-Web%20%7C%20Desktop-lightgrey)](https://github.com/vahstack/vahstack)
 
-**Neovate**, pronounced as `['niːəʊveɪt]`, is a **coding agent** to enhance your development workflow. You can use it to generate code, fix bugs, review code, add tests, and more.
+**VahStack** 是一款先进的**通用文档类任务助手**，专为提升文档处理效率而设计。它集成了智能内容生成、文档分析、任务管理和知识整理等功能，为用户提供全方位的文档工作解决方案。
 
-✨ See more at [neovateai.dev](https://neovateai.dev).
-
-![](https://mdn.alipayobjects.com/huamei_9rin5s/afts/img/6KdpRbD5RBEAAAAAWSAAAAgADiB8AQFr/original)
+✨ 体验智能文档处理的未来 [vahstack.dev](https://vahstack.dev)。
 
 </div>
 
-## Quick Start
+## 快速开始
 
-Ready to try Neovate Code? Getting started is simple:
-
-```bash
-npm install -g @neovate/code
-neovate
-# Or use the shorter alias
-neo
-```
-
-We respect the API KEY environment variable for all providers. If you don't have an API Key, enter `/login`, select a provider, open the website, and enter the API Key.
-
-Then enter `/model` to select a model of that provider.
-
-Then you can start to use Neovate Code, describe what you want to do in the command line, review proposed changes and approve tools calls.
+准备体验 VahStack 的强大功能？开始使用非常简单：
 
 ```bash
-# Examples of what you can do:
-"Add error handling to the user authentication function"
-"Refactor this component to use TypeScript"
-"Create unit tests for the payment service"
-"Optimize this database query"
+# 克隆仓库
+git clone https://github.com/vahstack/vahstack.git
+cd vahstack
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
 ```
 
-Visit our [quickstart](https://neovateai.dev/en/docs/quickstart) documentation for detailed installation and setup instructions.
+VahStack 支持多种 AI 服务提供商。您可以通过设置面板或环境变量配置 API 密钥。
 
-## Contributing
+配置完成后，您就可以利用 VahStack 的强大功能：
 
-Contributions are welcome! Please read the [CONTRIBUTING.md](./CONTRIBUTING.md) file for guidelines on setting up the development environment, running tests, and submitting pull requests.
+```bash
+# VahStack 能够处理的文档任务示例：
+"整理会议记录并生成行动项清单"
+"将技术文档转换为用户友好的操作指南"
+"分析报告内容并提取关键信息摘要"
+"生成项目文档的目录结构和章节大纲"
+"将散乱的笔记整理成结构化的知识库"
+```
 
-[![](https://www.openomy.com/svg?repo=neovateai/neovate-code&chart=bubble&latestMonth=3)](https://www.openomy.com/github/neovateai/neovate-code)
+访问我们的[文档](https://vahstack.dev/docs)获取详细的设置和使用说明。
 
-## License
+## 功能特性
+
+- 📝 **智能内容生成**：基于自然语言描述生成高质量文档内容
+- 🔍 **文档智能分析**：自动识别文档结构，提取关键信息和摘要
+- 📋 **任务管理系统**：将文档内容转化为可执行的任务清单
+- 📊 **知识图谱构建**：自动整理和关联文档中的知识点
+- 🌐 **多格式支持**：支持 Markdown、Word、PDF 等多种文档格式
+- 🎨 **现代化界面**：基于 React 构建的简洁直观的用户界面
+
+## 贡献指南
+
+我们欢迎社区贡献！请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md) 文件了解开发环境设置、运行测试和提交拉取请求的指南。
+
+## 许可证
 
 [MIT](./LICENSE)
