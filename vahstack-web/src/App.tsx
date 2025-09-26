@@ -1,125 +1,154 @@
-import { useState, useEffect } from 'react';
-import { Terminal } from './components/Terminal';
-import { FileSystemManager } from './utils/fileSystem';
-import type { VahStackConfig } from './types';
-import './App.css';
-import './agent/example';
+import React, { useState, useEffect } from 'react';
+import IndexPage from './pages/Index';
+import ChatPage from './pages/Chat';
 
-const defaultConfig: VahStackConfig = {
-  fileSystem: {
-    type: 'indexeddb',
-  },
-  terminal: {
-    theme: {
-      background: '#1e1e1e',
-      foreground: '#ffffff',
-      cursor: '#ffffff',
-    },
-    fontSize: 14,
-    fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
-    rows: 24,
-    cols: 80,
-  },
-  enableShellJS: true,
-  enableFileOperations: true,
-};
+/**
+ * 页面类型定义
+ *
+ * 设计原则：类型安全的路由管理
+ * - 限制页面只能是预定义的值，避免路由错误
+ * - 便于扩展新的页面类型
+ */
+type PageType = 'index' | 'chat';
 
-function App() {
-  const [fileSystemManager] = useState(
-    () => new FileSystemManager(defaultConfig.fileSystem),
-  );
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * 任务类型定义（根据使用上下文推断）
+ *
+ * 注：此类型可能需要根据实际的任务数据结构进行调整
+ */
+type Task = string | object | null;
 
+/**
+ * 应用程序主组件 - 单页应用的路由控制中心
+ *
+ * 核心职责：
+ * 1. 路由管理：基于浏览器路径和状态控制页面切换
+ * 2. 状态传递：在不同页面间传递初始化数据
+ * 3. 历史管理：处理浏览器前进/后退导航
+ * 4. 页面协调：统一管理页面间的数据流和导航逻辑
+ *
+ * 设计模式：
+ * - 状态机：管理页面切换的状态转换
+ * - 中介者模式：协调不同页面组件间的通信
+ * - 观察者模式：监听浏览器历史变化事件
+ *
+ * 架构特点：
+ * - 客户端路由：无需服务器端路由配置
+ * - 状态保持：在页面切换时保持必要的应用状态
+ * - 渐进增强：支持浏览器原生导航行为
+ */
+function App(): React.ReactElement {
+  /**
+   * 当前页面状态管理
+   *
+   * 设计考量：
+   * - 默认显示首页，符合用户访问流程
+   * - 使用类型安全的 PageType 确保路由一致性
+   * - 支持程序化和用户导航的双重控制
+   */
+  const [currentPage, setCurrentPage] = useState<PageType>('index');
+
+  /**
+   * 页面间数据传递状态
+   *
+   * 职责分离：
+   * - initialMessage: 从首页传递到聊天页的初始消息
+   * - selectTask: 选中的任务数据，支持上下文连续性
+   */
+  const [initialMessage, setInitialMessage] = useState<string>('');
+  const [selectTask, seSelectTask] = useState<Task>('');
+
+  /**
+   * 页面初始化效果
+   *
+   * 启动逻辑：
+   * 1. 读取当前浏览器路径
+   * 2. 根据路径设置对应的页面状态
+   * 3. 确保应用状态与URL同步
+   *
+   * 设计原则：URL即状态
+   * - 用户可以直接通过URL访问特定页面
+   * - 支持书签和分享功能
+   */
   useEffect(() => {
-    const initializeFileSystem = async () => {
-      try {
-        // 为了测试，可以取消注释下面这行来强制重新初始化
-        // await fileSystemManager.forceReinitialize();
+    const path = window.location.pathname;
+    if (path === '/chat') {
+      setCurrentPage('chat');
+    } else {
+      setCurrentPage('index');
+    }
+  }, []);
 
-        await fileSystemManager.initialize();
-
-        // 创建一些示例文件和目录
-        await fileSystemManager.createDirectory('/home');
-        await fileSystemManager.createDirectory('/tmp');
-        await fileSystemManager.writeFile(
-          '/welcome.txt',
-          'Welcome to VahStack!\nThis is a virtual terminal environment.\nYou can use commands like ls, cd, cat, mkdir, etc.\n\nTry: cd home && cat readme.md',
-        );
-        await fileSystemManager.writeFile(
-          '/home/welcome.txt',
-          'Welcome to VahStack!\nThis is a demo file in the virtual file system.',
-        );
-        await fileSystemManager.writeFile(
-          '/home/readme.md',
-          '# VahStack\n\nA web-based file system with terminal interface.\n\n## Features\n- Virtual file system\n- Terminal emulation\n- File operations',
-        );
-
-        setIsInitialized(true);
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Failed to initialize file system',
-        );
+  /**
+   * 浏览器历史导航监听器
+   *
+   * 交互逻辑：
+   * 1. 监听浏览器前进/后退按钮事件
+   * 2. 根据新路径更新页面状态
+   * 3. 处理特殊路径的规范化
+   *
+   * 用户体验优化：
+   * - 支持浏览器原生导航行为
+   * - 保持URL与应用状态的一致性
+   * - 自动清理无效路径状态
+   */
+  useEffect(() => {
+    const handlePopState = (): void => {
+      const path = window.location.pathname;
+      if (path === '/chat') {
+        setCurrentPage('chat');
+      } else {
+        setCurrentPage('index');
+        // 规范化根路径，确保URL整洁
+        window.history.replaceState(null, '', '/');
       }
     };
 
-    initializeFileSystem();
-  }, [fileSystemManager]);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
-  const handleCommand = (command: string) => {
-    console.log('Command executed:', command);
+  /**
+   * 聊天页面导航处理器
+   *
+   * 导航流程：
+   * 1. 设置传递给聊天页的初始数据
+   * 2. 切换到聊天页面状态
+   * 3. 更新浏览器URL和历史记录
+   *
+   * 参数设计：
+   * - message: 可选的初始消息，支持快速开始对话
+   * - task: 选中的任务上下文，保持工作连续性
+   */
+  const handleNavigateToChat = (
+    message: string = '',
+    task: Task = null,
+  ): void => {
+    setInitialMessage(message);
+    seSelectTask(task);
+    setCurrentPage('chat');
+    // 更新浏览器历史，支持后退导航
+    window.history.pushState(null, '', '/chat');
   };
 
-  if (error) {
-    return (
-      <div style={{ padding: '20px', color: 'red' }}>
-        <h2>Error</h2>
-        <p>{error}</p>
-      </div>
-    );
+  /**
+   * 条件渲染逻辑
+   *
+   * 渲染策略：
+   * - 基于当前页面状态选择对应组件
+   * - 传递必要的导航回调和初始数据
+   * - 保持组件间的松耦合关系
+   *
+   * 性能考虑：
+   * - 使用条件渲染而非同时挂载，优化内存使用
+   * - 每次只渲染当前活跃页面，提升性能
+   */
+  if (currentPage === 'index') {
+    return <IndexPage onNavigateToChat={handleNavigateToChat} />;
   }
 
-  if (!isInitialized) {
-    return (
-      <div style={{ padding: '20px' }}>
-        <h2>Initializing VahStack...</h2>
-        <p>Setting up virtual file system...</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="App">
-      <header
-        style={{
-          padding: '10px 20px',
-          backgroundColor: '#2d2d2d',
-          color: 'white',
-          borderBottom: '1px solid #444',
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: '18px' }}>🎯 VahStack Terminal</h1>
-        <p style={{ margin: '5px 0 0 0', fontSize: '12px', opacity: 0.7 }}>
-          Web-based file system with terminal interface
-        </p>
-      </header>
-
-      <main
-        style={{
-          height: 'calc(100vh - 80px)',
-          backgroundColor: '#1e1e1e',
-        }}
-      >
-        <Terminal
-          config={defaultConfig.terminal}
-          fileSystemManager={fileSystemManager}
-          onCommand={handleCommand}
-        />
-      </main>
-    </div>
-  );
+  // 聊天页面渲染
+  return <ChatPage initialMessage={initialMessage} selectTask={selectTask} />;
 }
 
 export default App;

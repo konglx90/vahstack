@@ -1,174 +1,113 @@
-import { runLoop, type RunLoopOptions, type LoopResult } from './loop';
-import { createBashTool } from './tools/bash';
-// import { createFetchTool } from './tools/fetch';
-import { createGlobTool } from './tools/glob';
-import { createTodoTool } from './tools/todo';
-import { createLSTool } from './tools/ls';
-import { createReadTool } from './tools/read';
-import type { ToolResult, TodoItem } from '../types';
+import { zodToJsonSchema } from 'zod-to-json-schema';
+import { resolveTools, Tools, type BrowserContext } from './tool';
+import { runLoop, type LoopResult, type RunLoopOptions } from './loop';
+import type { ToolResult } from '../types';
 
-// Export main functions
-export { runLoop };
-export type { RunLoopOptions, LoopResult, ToolResult };
+// Export additional agent components
+export { History } from './history';
+export type { Message, MessageContent, OnMessageCallback } from './history';
+export { parseMessage } from './parse-message';
+export type { ParsedContent } from './parse-message';
+export { Usage } from './usage';
 
-// Create tool instances with default configuration
-const cwd = '/';
-const productName = 'vahstack-next';
+// Export types for backward compatibility
+export type { BrowserContext, ToolResult };
 
-const bashTool = createBashTool();
-// const fetchTool = createFetchTool();
-const globTool = createGlobTool();
-const todoTools = createTodoTool({ filePath: `${cwd}/.todos.json` });
-const lsToolNew = createLSTool({ cwd, productName });
-const readTool = createReadTool();
-
-// Available tools registry
-export const availableTools = {
-  bash: bashTool,
-  // fetch: fetchTool,
-  glob: globTool,
-  todoWrite: todoTools.todoWriteTool,
-  todoRead: todoTools.todoReadTool,
-  ls: lsToolNew,
-  read: readTool,
+// Default browser context configuration
+const defaultContext: BrowserContext = {
+  cwd: '/',
+  productName: 'vahstack-next',
+  enableWrite: true,
+  enableTodo: true,
 };
 
-console.log('readTool.parameters', readTool.parameters);
+// Generate tool schemas for DeepSeek API
+export function generateToolSchemas(tools: Tools) {
+  const schemas = [];
 
-// Tool schemas for DeepSeek API
-export const toolSchemas = [
-  {
-    type: 'function' as const,
-    function: {
-      name: bashTool.name,
-      description: bashTool.description,
-      parameters: bashTool.parameters,
-    },
-  },
-  // {
-  //   type: 'function' as const,
-  //   function: {
-  //     name: fetchTool.name,
-  //     description: fetchTool.description,
-  //     parameters: fetchTool.parameters
-  //   }
-  // },
-  {
-    type: 'function' as const,
-    function: {
-      name: globTool.name,
-      description: globTool.description,
-      parameters: globTool.parameters,
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: todoTools.todoWriteTool.name,
-      description: todoTools.todoWriteTool.description,
-      parameters: todoTools.todoWriteTool.parameters,
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: todoTools.todoReadTool.name,
-      description: todoTools.todoReadTool.description,
-      parameters: todoTools.todoReadTool.parameters,
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: lsToolNew.name,
-      description: lsToolNew.description,
-      parameters: lsToolNew.parameters,
-    },
-  },
-  {
-    type: 'function' as const,
-    function: {
-      name: readTool.name,
-      description: readTool.description,
-      parameters: readTool.parameters,
-    },
-  },
-];
+  for (const [name, tool] of Object.entries(tools.tools)) {
+    const schema = {
+      type: 'function' as const,
+      function: {
+        name,
+        description: tool.description,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        parameters: zodToJsonSchema(tool.parameters as any, {
+          target: 'openApi3',
+          $refStrategy: 'none',
+        }),
+      },
+    };
+    schemas.push(schema);
+  }
 
-// Example usage function
-export async function createAgentWithTools(apiKey: string) {
-  const tools = {
-    bash: async (params: Record<string, unknown>): Promise<ToolResult> => {
-      console.log('🔧 [BASH] 执行参数:', params);
-      const result = await bashTool.execute(
-        params as { command: string; timeout?: number },
-      );
-      console.log('✅ [BASH] 执行结果:', result);
-      return result;
-    },
-    // fetch: async (params: Record<string, unknown>): Promise<ToolResult> => {
-    //   console.log('🌐 [FETCH] 执行参数:', params);
-    //   const result = await fetchTool.execute(params as { url: string; prompt: string });
-    //   console.log('✅ [FETCH] 执行结果:', result);
-    //   return result;
-    // },
-    glob: async (params: Record<string, unknown>): Promise<ToolResult> => {
-      console.log('🔍 [GLOB] 执行参数:', params);
-      const result = await globTool.execute(
-        params as { pattern: string; path?: string },
-      );
-      console.log('✅ [GLOB] 执行结果:', result);
-      return result;
-    },
-    todoWrite: async (params: Record<string, unknown>): Promise<ToolResult> => {
-      console.log('📝 [TODO_WRITE] 执行参数:', params);
-      const result = await todoTools.todoWriteTool.execute(
-        params as { todos: TodoItem[] },
-      );
-      console.log('✅ [TODO_WRITE] 执行结果:', result);
-      return result;
-    },
-    todoRead: async (): Promise<ToolResult> => {
-      console.log('📖 [TODO_READ] 执行参数: 无参数');
-      const result = await todoTools.todoReadTool.execute();
-      console.log('✅ [TODO_READ] 执行结果:', result);
-      return result;
-    },
-    ls: async (params: Record<string, unknown>): Promise<ToolResult> => {
-      console.log('📁 [LS] 执行参数:', params);
-      const result = await lsToolNew.execute(params as { dir_path: string });
-      console.log('✅ [LS] 执行结果:', result);
-      return result;
-    },
-    read: async (params: Record<string, unknown>): Promise<ToolResult> => {
-      console.log('📖 [READ] 执行参数:', params);
-      const result = await readTool.execute(
-        params as {
-          file_path: string;
-          offset?: number | null;
-          limit?: number | null;
-        },
-      );
-      console.log('✅ [READ] 执行结果:', result);
-      return result;
-    },
-  };
+  return schemas;
+}
+
+// Create Agent using DeepSeek API
+export async function createAgentWithTools(
+  apiKey: string,
+  context: BrowserContext = defaultContext,
+  sessionId?: string,
+) {
+  // Create tools instance using the existing tool management system
+  const toolsInstance = new Tools(
+    await resolveTools({
+      context,
+      sessionId,
+      write: context.enableWrite,
+      todo: context.enableTodo,
+    }),
+  );
+
+  // Generate tool schemas for DeepSeek API
+  const toolSchemas = generateToolSchemas(toolsInstance);
+
+  // Create tool functions map for runLoop
+  const toolFunctions: Record<
+    string,
+    (params: Record<string, unknown>) => Promise<ToolResult>
+  > = {};
+  for (const [name, tool] of Object.entries(toolsInstance.tools)) {
+    toolFunctions[name] = async (params: Record<string, unknown>) => {
+      return await tool.execute(params);
+    };
+  }
 
   return {
-    runLoop: (input: string, options?: Partial<RunLoopOptions>) => {
-      return runLoop({
+    runLoop: async (
+      input: string,
+      options?: {
+        maxTurns?: number;
+        onTextDelta?: (text: string) => void;
+        onToolApprove?: (toolUse: {
+          name: string;
+          params: Record<string, unknown>;
+          callId: string;
+        }) => Promise<boolean>;
+      },
+    ): Promise<LoopResult> => {
+      const runOptions: RunLoopOptions = {
         input,
         apiKey,
-        tools,
-        ...options,
-      });
+        tools: toolFunctions,
+        toolSchemas,
+        maxTurns: options?.maxTurns,
+        onTextDelta: options?.onTextDelta,
+        onToolApprove: options?.onToolApprove,
+      };
+
+      return runLoop(runOptions);
     },
-    tools,
-    schemas: toolSchemas,
+    toolsInstance,
   };
 }
 
-// Example usage with the provided API key
-export const defaultAgent = createAgentWithTools(
-  'sk-e01d55d672994105998e4a03fa545a9c',
-);
+// Create default agent with DeepSeek API key
+export const createDefaultAgent = () => {
+  const key = 'sk-e01d55d672994105998e4a03fa545a9c';
+  return createAgentWithTools(key);
+};
+
+// Backward compatibility - keep the old interface
+export const defaultAgent = createDefaultAgent();

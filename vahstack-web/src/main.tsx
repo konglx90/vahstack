@@ -1,10 +1,11 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import './monaco-worker';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
 import './index.css';
-import App from './App.tsx';
+import { TaskProvider } from './TaskContext';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <TaskProvider>
     <App />
-  </StrictMode>,
+  </TaskProvider>,
 );

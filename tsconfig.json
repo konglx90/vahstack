@@ -9,11 +9,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": "vahstack-cli",
     "resolveJsonModule": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "src/server/**/*.ts"]
+  "include": ["vahstack-cli"],
+  "exclude": ["node_modules", "dist", "vahstack-cli/server/**/*.ts"]
 }

@@ -14,11 +14,11 @@
     "neo": "./dist/cli.mjs"
   },
   "scripts": {
-    "dev": "bun ./src/cli.ts",
+    "dev": "bun ./vahstack-cli/cli.ts",
     "biome:format": "biome format .",
     "build:type": "tsc --project tsconfig.json --emitDeclarationOnly --declarationDir dist-dts",
-    "build:cli": "bun build src/cli.ts --external react-devtools-core --minify --outfile dist/cli.mjs --target=node",
-    "build:index": "bun build src/index.ts --external react-devtools-core --minify --outfile dist/index.mjs --target=node",
+    "build:cli": "bun build vahstack-cli/cli.ts --external react-devtools-core --minify --outfile dist/cli.mjs --target=node",
+    "build:index": "bun build vahstack-cli/index.ts --external react-devtools-core --minify --outfile dist/index.mjs --target=node",
     "build:dts": "npm run build:type && api-extractor run --local --verbose",
     "build:browser": "pnpm --filter @neovate/browser build",
     "build:post": "bun scripts/post-build.ts",

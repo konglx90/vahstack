@@ -82,6 +82,7 @@ function isIgnored(filePath: string): boolean {
   return ignorePatterns.some((pattern) => {
     if (pattern.includes('*')) {
       const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+      if (!basename) return false;
       return regex.test(basename);
     }
     return basename === pattern;
